@@ -1,0 +1,90 @@
+name: Java Deployment Workflow
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - development
+      - production
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        java-version: [21] 
+        os: [ubuntu-latest]
+        distribution: [temurin]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 11
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: ${{ matrix.distribution }}
+          cache: maven
+          
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+        
+  # unit-testing:
+  #   name: Unit Tests
+  #   strategy:
+  #     matrix:
+  #       java-version: [21]
+  #       os: [ubuntu-latest]
+
+  #   runs-on: ${{ matrix.os }}
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Set up JDK
+  #       uses: actions/setup-java@v3
+  #       with:
+  #         java-version: ${{ matrix.java-version }}
+  #         distribution: temurin
+  #     - name: Install Dependencies
+  #       run: mvn dependency:go-offline
+  #     - name: Unit Testing
+  #       run: mvn -B test
+
+  # publish-job:  
+  #   needs: [build, unit-testing] # Requires both build and tests to pass
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@v3
+  #     - name: Set up JDK
+  #       uses: actions/setup-java@v3
+  #       with:
+  #         java-version: '21' # Assumes you want to publish with JDK 21
+  #         distribution: temurin
+  #     - run: mvn --batch-mode --update-snapshots verify
+  #     - run: mkdir staging && cp target/*.jar staging
+  #     - uses: actions/upload-artifact@v3
+  #       with:
+  #         name: Package
+  #         path: staging
+
+  # dev-deploy:
+  #   needs: publish-job
+  #   uses: ./.github/workflows/reuse-deploy.yml
+  #   strategy:
+  #     matrix:
+  #       environment: [development]
+
+    # dev-integration-testing:
+
+    # prod-deploy:
+    #     needs: [build, unit-testing, code-coverage]
+    #     uses: ./.github/workflows/reuse-deploy.yml
+    #     secrets:
+    #         test-db-password: ${{ secrets.TEST }}
+    #         mongo-db-password: ${{ secrets.MONGODB_PASSWORD }}
+    #     environment: 
+    #       name: ${{ github.ref == 'refs/heads/main' || 'production' }}
+    #       url: ${{ github.ref == 'refs/heads/main'  || 'https://prod-url.com' }} # Update with your actual URLs
+    #     strategy:
+    #       matrix:
+    #         environment: [development]
+
+    # prod-integration-testing:
