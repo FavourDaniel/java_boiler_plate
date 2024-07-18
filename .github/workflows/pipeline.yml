@@ -34,6 +34,7 @@ jobs:
       matrix:
         java-version: [21]
         os: [ubuntu-latest]
+        distribution: [temurin]
 
     runs-on: ${{ matrix.os }}
     steps:
@@ -42,28 +43,35 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: ${{ matrix.java-version }}
-          distribution: temurin
+          distribution: ${{ matrix.distribution }}
       - name: Install Dependencies
         run: mvn dependency:go-offline
       - name: Unit Testing
         run: mvn -B test
 
-  # publish-job:  
-  #   needs: [build, unit-testing] # Requires both build and tests to pass
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-  #     - name: Set up JDK
-  #       uses: actions/setup-java@v3
-  #       with:
-  #         java-version: '21' # Assumes you want to publish with JDK 21
-  #         distribution: temurin
-  #     - run: mvn --batch-mode --update-snapshots verify
-  #     - run: mkdir staging && cp target/*.jar staging
-  #     - uses: actions/upload-artifact@v3
-  #       with:
-  #         name: Package
-  #         path: staging
+  publish-job:  
+    name: Unit Tests
+    strategy:
+      matrix:
+        java-version: [21]
+        os: [ubuntu-latest]
+        distribution: [temurin]
+    needs: [build, unit-testing] # Requires both build and tests to pass
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: ${{ matrix.distribution }}
+      - run: mvn --batch-mode --update-snapshots verify
+      - run: mkdir staging && cp target/*.jar staging
+      - uses: actions/upload-artifact@v3
+        with:
+          name: Package
+          path: staging
 
   # dev-deploy:
   #   needs: publish-job
