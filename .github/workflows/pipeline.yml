@@ -38,7 +38,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
@@ -50,7 +50,7 @@ jobs:
         run: mvn -B test
 
   publish-job:  
-    name: Unit Tests
+    name: Publish Artifact
     strategy:
       matrix:
         java-version: [21]
@@ -60,7 +60,7 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
