@@ -84,9 +84,10 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           script: |
-            sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST \
-            sudo apt install -y openjdk-17-jdk
+            ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "bash -s" <<-'ENDSSH'
+            sudo apt-get update -y
+            sudo apt-get install -y openjdk-17-jdk 
             export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
-            echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
             cd /home/dhee/
-            sudo nohup java -jar hng-java-boilerplate-0.0.1-SNAPSHOT.jar &
+            sudo nohup java -jar hng-java-boilerplate-0.0.1-SNAPSHOT.jar > /dev/null 2>&1 & 
+            ENDSSH
