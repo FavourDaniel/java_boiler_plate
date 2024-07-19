@@ -60,14 +60,15 @@ jobs:
         run: |
           for i in {1..10}; do # Retry 10 times with 5-second intervals
             echo "Attempt $i to connect to PostgreSQL..."
-            if PGPASSWORD=password psql -h localhost -U postgres -c '\q'; then
+            if PGPASSWORD=password psql -h postgres -U postgres -c '\q' 2>/dev/null; then # Use 'postgres' as hostname
               echo "Connected to PostgreSQL successfully."
-              mvn flyway:migrate -Dflyway.user=postgres -Dflyway.password=password -Dflyway.url=jdbc:postgresql://localhost:5432/test_db && break
+              mvn flyway:migrate -Dflyway.user=postgres -Dflyway.password=password -Dflyway.url=jdbc:postgresql://postgres:5432/test_db && break 
             else
               echo "PostgreSQL is not ready yet. Retrying in 5 seconds..."
               sleep 5
             fi
           done
+          echo "PostgreSQL connection failed after 10 attempts."
 
 
       # - name: Run Flyway Migrations
