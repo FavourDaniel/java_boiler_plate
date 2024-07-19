@@ -50,8 +50,8 @@ jobs:
         uses: actions/upload-artifact@v3
         if: always()
         with: 
-          name: artifact
-          path: target
+          name: test-results
+          path: target/test-results
 
 
   deploy:
