@@ -1,5 +1,8 @@
 #!/bin/bash
-echo "$SSH_PASSWORD" | sudo -S apt-get install -y openjdk-17-jdk 
-export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
-cd /home/dhee/
-sudo nohup java -jar hng-java-boilerplate-0.0.1-SNAPSHOT.jar > /dev/null 2>&1 &
+
+cd ~/java_boiler_plate/
+# git pull 
+./stop-app.sh
+mvn dependency:resolve
+./mvnw clean install
+sudo -S nohup ./mvnw spring-boot:run > app.log 2>&1 &
