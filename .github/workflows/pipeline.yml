@@ -55,13 +55,15 @@ jobs:
 
 
   deploy:
-    needs: unit-test
+    needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/dev'
     environment: dev
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: List Available Artifacts
+        run: echo "${{ toJson(github.workspace.artifact) }}"
       - name: Download Artifact
         uses: actions/download-artifact@v4
         with:
