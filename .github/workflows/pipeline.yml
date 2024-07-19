@@ -172,10 +172,11 @@ jobs:
           # port: 22
           script: |
             sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST \
+            sudo apt update -y
+            sudo apt install -y openjdk-17-jdk
+            export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
             cd /home/dhee/
-            apt update
-            apt install -y openjdk-17-jdk
-            nohup java -jar hng-java-boilerplate-0.0.1-SNAPSHOT.jar &
+            sudo nohup java -jar hng-java-boilerplate-0.0.1-SNAPSHOT.jar &
 
 
       # - name: SSH into Server and Execute Command
