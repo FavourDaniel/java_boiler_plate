@@ -46,36 +46,29 @@ jobs:
       #     PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE IF NOT EXISTS test_db;" || true 
       #     sleep 30
 
-      - name: Setup Database
-        run: |
-          sudo apt-get install -y postgresql-client 
-          # Check if database exists
-          if ! PGPASSWORD=password psql -h localhost -U postgres -lqt | cut -d \| -f 1 | grep -qw test_db; then
-            # Create database if it doesn't exist
-            PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE test_db;"
-          fi
-          sleep 30
-
-      - name: Run Flyway Migrations
-        run: |
-          for i in {1..10}; do # Retry 10 times with 5-second intervals
-            echo "Attempt $i to connect to PostgreSQL..."
-            if PGPASSWORD=password psql -h postgres -U postgres -c '\q' 2>/dev/null; then # Use 'postgres' as hostname
-              echo "Connected to PostgreSQL successfully."
-              mvn flyway:migrate -Dflyway.user=postgres -Dflyway.password=password -Dflyway.url=jdbc:postgresql://postgres:5432/test_db && break 
-            else
-              echo "PostgreSQL is not ready yet. Retrying in 5 seconds..."
-              sleep 5
-            fi
-          done
-          echo "PostgreSQL connection failed after 10 attempts."
-
+      # - name: Setup Database
+      #   run: |
+      #     sudo apt-get install -y postgresql-client 
+      #     # Check if database exists
+      #     if ! PGPASSWORD=password psql -h localhost -U postgres -lqt | cut -d \| -f 1 | grep -qw test_db; then
+      #       # Create database if it doesn't exist
+      #       PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE test_db;"
+      #     fi
+      #     sleep 30
 
       # - name: Run Flyway Migrations
       #   run: |
-      #     for i in {1..5}; do # Retry 5 times
-      #       mvn flyway:migrate -Dflyway.user=postgres -Dflyway.password=password -Dflyway.url=jdbc:postgresql://localhost:5432/test_db && break || sleep 10
+      #     for i in {1..10}; do # Retry 10 times with 5-second intervals
+      #       echo "Attempt $i to connect to PostgreSQL..."
+      #       if PGPASSWORD=password psql -h postgres -U postgres -c '\q' 2>/dev/null; then # Use 'postgres' as hostname
+      #         echo "Connected to PostgreSQL successfully."
+      #         mvn flyway:migrate -Dflyway.user=postgres -Dflyway.password=password -Dflyway.url=jdbc:postgresql://postgres:5432/test_db && break 
+      #       else
+      #         echo "PostgreSQL is not ready yet. Retrying in 5 seconds..."
+      #         sleep 5
+      #       fi
       #     done
+      #     echo "PostgreSQL connection failed after 10 attempts."
 
 
       - name: Start Spring Boot Application
@@ -141,6 +134,31 @@ jobs:
   #   strategy:
   #     matrix:
   #       environment: [development]
+
+
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Install sshpass
+      run: sudo apt-get update && sudo apt-get install -y sshpass
+    - name: Add SSH Key to Known Hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
+      env:
+        SSH_HOST: ${{ secrets.SSH_HOST }}
+    - name: SSH into Server and Execute Command
+      run: |
+        sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST
+      env:
+        SSH_HOST: ${{ secrets.SSH_HOST }}
+        SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+
+
 
     # dev-integration-testing:
 
