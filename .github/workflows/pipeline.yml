@@ -103,7 +103,7 @@ jobs:
         run: mvn -B test
 
       - name: Archive Test Result
-        uses: actions/uploadartifact@v3
+        uses: actions/upload-artifact@v3
         if: always()
         with: 
           name: Java-Test-Result
