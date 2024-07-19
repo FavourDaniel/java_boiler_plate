@@ -84,13 +84,14 @@ jobs:
       #     SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
 
       - name: Deploy and Run Application
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          password: ${{ secrets.SSH_PASSWORD }}
-          script: |
+        run: |
+          sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST << 'EOF'
             echo "$SSH_PASSWORD" | sudo -S apt-get install -y openjdk-17-jdk 
             export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
             cd /home/dhee/
             sudo nohup java -jar hng-java-boilerplate-0.0.1-SNAPSHOT.jar > /dev/null 2>&1 &
+          EOF
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
