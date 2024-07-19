@@ -6,4 +6,4 @@ cd ~
 cd ~/java_boiler_plate/
 mvn dependency:resolve
 ./mvnw clean install
-sudo -S nohup ./mvnw spring-boot:run > app.log 2>&1 &
+nohup ./mvnw spring-boot:run > app.log 2>&1 &
