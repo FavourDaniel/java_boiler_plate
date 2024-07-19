@@ -76,13 +76,13 @@ jobs:
           mvn spring-boot:run &
           sleep 60
 
-      - name: Run Tests
-        run: |
-          psql -h localhost -U postgres -d test_db -c "SELECT * FROM users;" > users.txt
-          USER_ID=$(grep -oP '^\|\s+\K[^\s]+(?=\s+\|)' users.txt | head -1)
-          curl -X GET http://localhost:8080/api/v1/users/$USER_ID
-          echo "Response of the first user: $(curl -X GET http://localhost:8080/api/v1/users/$USER_ID)"
-          mvn test
+      # - name: Run Tests
+      #   run: |
+      #     psql -h localhost -U postgres -d test_db -c "SELECT * FROM users;" > users.txt
+      #     USER_ID=$(grep -oP '^\|\s+\K[^\s]+(?=\s+\|)' users.txt | head -1)
+      #     curl -X GET http://localhost:8080/api/v1/users/$USER_ID
+      #     echo "Response of the first user: $(curl -X GET http://localhost:8080/api/v1/users/$USER_ID)"
+      #     mvn test
 
   unit-test:
     needs: build
