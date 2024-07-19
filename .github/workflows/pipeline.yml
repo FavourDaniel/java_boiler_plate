@@ -127,37 +127,63 @@ jobs:
           name: Package
           path: staging
 
-
-  # dev-deploy:
-  #   needs: publish-job
-  #   uses: ./.github/workflows/reuse-deploy.yml
-  #   strategy:
-  #     matrix:
-  #       environment: [development]
-
-
-
   deploy:
     needs: publish-job
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/dev'
+    environment: dev
+
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-    - name: Install sshpass
-      run: sudo apt-get update && sudo apt-get install -y sshpass
-    - name: Add SSH Key to Known Hosts
-      run: |
-        mkdir -p ~/.ssh
-        ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
-      env:
-        SSH_HOST: ${{ secrets.SSH_HOST }}
-    - name: SSH into Server and Execute Command
-      run: |
-        sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST
-      env:
-        SSH_HOST: ${{ secrets.SSH_HOST }}
-        SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
-        SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: Package
+
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+  
+      - name: Add SSH Key to Known Hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan $SSH_HOST >> ~/.ssh/known_hosts
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+
+      # - name: SSH into Server and Execute Command
+      #   run: |
+      #     sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST
+      #   env:
+      #     SSH_HOST: ${{ secrets.SSH_HOST }}
+      #     SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+      #     SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+
+      - name: Extract JAR
+        run: unzip Package/*.jar -d app
+
+      - name: Transfer JAR to Server
+        run: |
+          sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no staging/*.jar $SSH_USERNAME@$SSH_HOST:/home/dhee/
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+
+      - name: SSH into Server and Execute Command (Start/Restart)
+        run: |
+          sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST "cd /path/to/your/deployment/directory && \
+          sudo systemctl stop your-app-service && \
+          nohup java -jar your-app.jar & && \
+          sudo systemctl start your-app-service"
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
+          SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
+
+
+
 
 
 
