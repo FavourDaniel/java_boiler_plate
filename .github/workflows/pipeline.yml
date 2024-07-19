@@ -43,18 +43,25 @@ jobs:
       - name: Setup Database
         run: |
           sudo apt-get install -y postgresql-client 
-          PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE test_db;" || true 
+          PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE IF NOT EXISTS test_db;" || true 
           sleep 30
-
-      # - name: Run Flyway Migrations
-      #   run: |
-      #     mvn flyway:migrate -Dflyway.user=postgres -Dflyway.password=password -Dflyway.url=jdbc:postgresql://localhost:5432/test_db
 
       - name: Run Flyway Migrations
         run: |
-          for i in {1..5}; do # Retry 5 times
-            mvn flyway:migrate -Dflyway.user=postgres -Dflyway.password=password -Dflyway.url=jdbc:postgresql://localhost:5432/test_db && break || sleep 10
+          for i in {1..10}; do # Retry 10 times with 5-second intervals
+            if PGPASSWORD=password psql -h localhost -U postgres -c '\q' 2>/dev/null; then
+              mvn flyway:migrate -Dflyway.user=postgres -Dflyway.password=password -Dflyway.url=jdbc:postgresql://localhost:5432/test_db && break
+            else
+              echo "Waiting for PostgreSQL to start..."
+              sleep 5
+            fi
           done
+
+      # - name: Run Flyway Migrations
+      #   run: |
+      #     for i in {1..5}; do # Retry 5 times
+      #       mvn flyway:migrate -Dflyway.user=postgres -Dflyway.password=password -Dflyway.url=jdbc:postgresql://localhost:5432/test_db && break || sleep 10
+      #     done
 
 
       - name: Start Spring Boot Application
@@ -71,6 +78,7 @@ jobs:
           mvn test
 
   unit-test:
+    needs: build
     name: Unit Test
     runs-on: ubuntu-latest
     steps:
