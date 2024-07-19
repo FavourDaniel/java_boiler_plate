@@ -83,10 +83,12 @@ jobs:
       #     SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
       #     SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
 
+      - name: Copy deploy.sh to workflow directory
+        run: cp ../deploy.sh .
 
       - name: Deploy and Run Application
         run: |
-          sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no -t $SSH_USERNAME@$SSH_HOST < ../deploy.sh
+          sshpass -p $SSH_PASSWORD ssh -o StrictHostKeyChecking=no -t $SSH_USERNAME@$SSH_HOST < deploy.sh
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
