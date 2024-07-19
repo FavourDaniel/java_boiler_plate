@@ -38,51 +38,24 @@ jobs:
           cache: maven
           
       - name: Build with Maven
-        run: mvn -B package --file pom.xml
+        run: mvn -B package --file pom.xml clean package
 
-      # - name: Setup Database
+      # - name: Start Spring Boot Application
       #   run: |
-      #     sudo apt-get install -y postgresql-client 
-      #     PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE IF NOT EXISTS test_db;" || true 
-      #     sleep 30
+      #     mvn spring-boot:run &
+      #     sleep 60
 
-      # - name: Setup Database
-      #   run: |
-      #     sudo apt-get install -y postgresql-client 
-      #     # Check if database exists
-      #     if ! PGPASSWORD=password psql -h localhost -U postgres -lqt | cut -d \| -f 1 | grep -qw test_db; then
-      #       # Create database if it doesn't exist
-      #       PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE test_db;"
-      #     fi
-      #     sleep 30
+      - name: Show contents of the current working directory
+        run: ls -la
 
-      # - name: Run Flyway Migrations
-      #   run: |
-      #     for i in {1..10}; do # Retry 10 times with 5-second intervals
-      #       echo "Attempt $i to connect to PostgreSQL..."
-      #       if PGPASSWORD=password psql -h postgres -U postgres -c '\q' 2>/dev/null; then # Use 'postgres' as hostname
-      #         echo "Connected to PostgreSQL successfully."
-      #         mvn flyway:migrate -Dflyway.user=postgres -Dflyway.password=password -Dflyway.url=jdbc:postgresql://postgres:5432/test_db && break 
-      #       else
-      #         echo "PostgreSQL is not ready yet. Retrying in 5 seconds..."
-      #         sleep 5
-      #       fi
-      #     done
-      #     echo "PostgreSQL connection failed after 10 attempts."
+      - name: Show contents of the target directory
+        run: ls -la target
 
-
-      - name: Start Spring Boot Application
-        run: |
-          mvn spring-boot:run &
-          sleep 60
-
-      # - name: Run Tests
-      #   run: |
-      #     psql -h localhost -U postgres -d test_db -c "SELECT * FROM users;" > users.txt
-      #     USER_ID=$(grep -oP '^\|\s+\K[^\s]+(?=\s+\|)' users.txt | head -1)
-      #     curl -X GET http://localhost:8080/api/v1/users/$USER_ID
-      #     echo "Response of the first user: $(curl -X GET http://localhost:8080/api/v1/users/$USER_ID)"
-      #     mvn test
+      - name: Upload Maven build artifact
+        uses: actions/upload-artifact@v1
+        with:
+          name: artifact
+          path: ./target/hng-java-boilerplate-0.0.1-SNAPSHOT.jar
 
   unit-test:
     needs: build
@@ -160,7 +133,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           # port: 22
-          source: "hng-java-boilerplate-0.0.1-SNAPSHOT.jar"
+          source: "staging/"
           target: "/home/dhee/hng-java-boilerplate-0.0.1-SNAPSHOT.jar"
     
       - name: SSH and Run Application
@@ -173,8 +146,9 @@ jobs:
           script: |
             sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST \
             sudo apt update -y
-            sudo apt install -y openjdk-17-jdk sshpass
+            sudo apt install -y openjdk-17-jdk
             export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
+            echo "JAVA_HOME=$JAVA_HOME" >> $GITHUB_ENV
             cd /home/dhee/
             sudo nohup java -jar hng-java-boilerplate-0.0.1-SNAPSHOT.jar &
 
