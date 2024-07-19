@@ -70,12 +70,12 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
       - name: Transfer JAR file to server
-        run: sshpass -p ${{ secrets.SSH_PASSWORD }} scp -o StrictHostKeyChecking=no target/hng-java-boilerplate-0.0.1-SNAPSHOT.jar ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/home/dhee/
+        run: sshpass -p ${{ secrets.SSH_PASSWORD }} scp -o StrictHostKeyChecking=no ./target/hng-java-boilerplate-0.0.1-SNAPSHOT.jar ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/home/dhee/
         env:
           SSH_HOST: ${{ secrets.SSH_HOST }}
           SSH_USERNAME: ${{ secrets.SSH_USERNAME }}
           SSH_PASSWORD: ${{ secrets.SSH_PASSWORD }}
-          
+
       - name: Add SSH Key to Known Hosts
         run: |
           mkdir -p ~/.ssh
