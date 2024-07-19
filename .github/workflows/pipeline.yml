@@ -160,7 +160,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           # port: 22
-          source: "staging/"
+          source: "hng-java-boilerplate-0.0.1-SNAPSHOT.jar"
           target: "/home/dhee/hng-java-boilerplate-0.0.1-SNAPSHOT.jar"
     
       - name: SSH and Run Application
@@ -173,7 +173,7 @@ jobs:
           script: |
             sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no $SSH_USERNAME@$SSH_HOST \
             sudo apt update -y
-            sudo apt install -y openjdk-17-jdk
+            sudo apt install -y openjdk-17-jdk sshpass
             export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
             cd /home/dhee/
             sudo nohup java -jar hng-java-boilerplate-0.0.1-SNAPSHOT.jar &
