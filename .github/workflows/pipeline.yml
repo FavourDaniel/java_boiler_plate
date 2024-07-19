@@ -40,22 +40,35 @@ jobs:
       - name: Build with Maven
         run: mvn -B package --file pom.xml
 
+      # - name: Setup Database
+      #   run: |
+      #     sudo apt-get install -y postgresql-client 
+      #     PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE IF NOT EXISTS test_db;" || true 
+      #     sleep 30
+
       - name: Setup Database
         run: |
           sudo apt-get install -y postgresql-client 
-          PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE IF NOT EXISTS test_db;" || true 
+          # Check if database exists
+          if ! PGPASSWORD=password psql -h localhost -U postgres -lqt | cut -d \| -f 1 | grep -qw test_db; then
+            # Create database if it doesn't exist
+            PGPASSWORD=password psql -h localhost -U postgres -c "CREATE DATABASE test_db;"
+          fi
           sleep 30
 
       - name: Run Flyway Migrations
         run: |
           for i in {1..10}; do # Retry 10 times with 5-second intervals
-            if PGPASSWORD=password psql -h localhost -U postgres -c '\q' 2>/dev/null; then
+            echo "Attempt $i to connect to PostgreSQL..."
+            if PGPASSWORD=password psql -h localhost -U postgres -c '\q'; then
+              echo "Connected to PostgreSQL successfully."
               mvn flyway:migrate -Dflyway.user=postgres -Dflyway.password=password -Dflyway.url=jdbc:postgresql://localhost:5432/test_db && break
             else
-              echo "Waiting for PostgreSQL to start..."
+              echo "PostgreSQL is not ready yet. Retrying in 5 seconds..."
               sleep 5
             fi
           done
+
 
       # - name: Run Flyway Migrations
       #   run: |
