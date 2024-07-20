@@ -3,6 +3,7 @@
 # git pull 
 cd ~
 ./stop-app.sh
+cp application.properties ~/java_boiler_plate/src/main/resources/
 cd ~/java_boiler_plate/
 mvn dependency:resolve
 ./mvnw clean install
